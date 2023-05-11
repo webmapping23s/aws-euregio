@@ -13,7 +13,8 @@ let map = L.map("map", {
 
 // thematische Layer
 let themaLayer = {
-    stations: L.featureGroup()
+    stations: L.featureGroup(),
+    temperature: L.featureGroup(),
 }
 
 // Hintergrundlayer
@@ -27,7 +28,8 @@ let layerControl = L.control.layers({
     "Esri WorldTopoMap": L.tileLayer.provider("Esri.WorldTopoMap"),
     "Esri WorldImagery": L.tileLayer.provider("Esri.WorldImagery")
 }, {
-    "Wetterstationen": themaLayer.stations.addTo(map)
+    "Wetterstationen": themaLayer.stations.addTo(map),
+    "Temperatur": themaLayer.temperature.addTo(map),
 }).addTo(map);
 
 // Maßstab
@@ -35,11 +37,7 @@ L.control.scale({
     imperial: false,
 }).addTo(map);
 
-// Vienna Sightseeing Haltestellen
-async function showStations(url) {
-    let response = await fetch(url);
-    let jsondata = await response.json();
-
+function writeStationLayer(jsondata) {
     // Wetterstationen mit Icons und Popups implementieren
     L.geoJSON(jsondata, {
         pointToLayer: function (feature, latlng) {
@@ -56,16 +54,23 @@ async function showStations(url) {
             let prop = feature.properties;
             let pointInTime = new Date(prop.date);
             layer.bindPopup(`
-                <h4>${prop.name} (${feature.geometry.coordinates[2]}m)</h4>
-                <ul>
-                    <li>Lufttemperatur (°C): ${prop.LT || "-"}</li>
-                    <li>Relative Luftfeuchte (%): ${prop.RH || "-"}</li>
-                    <li>Windgeschwindigkeit (km/h): ${prop.WG ? (prop.WG * 3.6).toFixed(1) : "-"}</li>
-                    <li>Schneehöhe (cm): ${prop.HS || "-"}</li>
-                </ul>
-                <span>${pointInTime.toLocaleString()}</span>
-            `);
+                    <h4>${prop.name} (${feature.geometry.coordinates[2]}m)</h4>
+                    <ul>
+                        <li>Lufttemperatur (°C): ${prop.LT || "-"}</li>
+                        <li>Relative Luftfeuchte (%): ${prop.RH || "-"}</li>
+                        <li>Windgeschwindigkeit (km/h): ${prop.WG ? (prop.WG * 3.6).toFixed(1) : "-"}</li>
+                        <li>Schneehöhe (cm): ${prop.HS || "-"}</li>
+                    </ul>
+                    <span>${pointInTime.toLocaleString()}</span>
+                `);
         }
     }).addTo(themaLayer.stations);
 }
-showStations("https://static.avalanche.report/weather_stations/stations.geojson");
+
+async function loadStations(url) {
+    let response = await fetch(url);
+    let jsondata = await response.json();
+    writeStationLayer(jsondata);
+    // laksjdlkj
+}
+loadStations("https://static.avalanche.report/weather_stations/stations.geojson");
