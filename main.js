@@ -39,6 +39,14 @@ L.control.scale({
     imperial: false,
 }).addTo(map);
 
+function getColor(value, ramp) {
+    for (let rule of ramp) {
+        if (value >= rule.min && value < rule.max) {
+            return rule.color;
+        }
+    }
+}
+
 function writeStationLayer(jsondata) {
     // Wetterstationen mit Icons und Popups implementieren
     L.geoJSON(jsondata, {
@@ -77,10 +85,12 @@ function writeTemperatureLayer(jsondata) {
             }
         },
         pointToLayer: function (feature, latlng) {
+            let color = getColor(feature.properties.LT, COLORS.temperature);
+            console.log("Color: ", color);
             return L.marker(latlng, {
                 icon: L.divIcon({
                     className: "aws-div-icon",
-                    html: `<span>${feature.properties.LT.toFixed(1)}</span>`
+                    html: `<span style="background-color:${color}">${feature.properties.LT.toFixed(1)}</span>`
                 })
             });
         },
