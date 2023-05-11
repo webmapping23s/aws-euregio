@@ -69,7 +69,7 @@ const COLORS = {
         {
             min: 5,
             max: 10,
-            color: "##c8ff64;",
+            color: "#c8ff64;",
         },
         {
             min: 10,
