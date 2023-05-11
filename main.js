@@ -15,6 +15,7 @@ let map = L.map("map", {
 let themaLayer = {
     stations: L.featureGroup(),
     temperature: L.featureGroup(),
+    windspeed: L.featureGroup(),
 }
 
 // Hintergrundlayer
@@ -29,7 +30,8 @@ let layerControl = L.control.layers({
     "Esri WorldImagery": L.tileLayer.provider("Esri.WorldImagery")
 }, {
     "Wetterstationen": themaLayer.stations,
-    "Temperatur": themaLayer.temperature.addTo(map),
+    "Temperatur": themaLayer.temperature,
+    "Windgeschwindigkeit": themaLayer.windspeed.addTo(map), 
 }).addTo(map);
 
 layerControl.expand();
@@ -97,10 +99,33 @@ function writeTemperatureLayer(jsondata) {
     }).addTo(themaLayer.temperature);
 }
 
+function writeWindspeedLayer(jsondata) {
+    L.geoJSON(jsondata, {
+        filter: function(feature) {
+            if (feature.properties.WG >= 0 && feature.properties.WG < 70) {
+                return true;
+            }
+        },
+        pointToLayer: function (feature, latlng) {
+            let wg_kmh = feature.properties.WG * 3.6;
+            let color = getColor(wg_kmh, COLORS.wind);
+            return L.marker(latlng, {
+                icon: L.divIcon({
+                    className: "aws-div-icon",
+                    html: `<span style="background-color:${color}">${wg_kmh.toFixed(1)}</span>`
+                })
+            });
+        },
+    }).addTo(themaLayer.windspeed);
+}
+
+
 async function loadStations(url) {
     let response = await fetch(url);
     let jsondata = await response.json();
     writeStationLayer(jsondata);
     writeTemperatureLayer(jsondata);
+    writeWindspeedLayer(jsondata);
+
 }
 loadStations("https://static.avalanche.report/weather_stations/stations.geojson");
