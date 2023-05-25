@@ -16,6 +16,7 @@ let themaLayer = {
     stations: L.featureGroup(),
     temperature: L.featureGroup(),
     windspeed: L.featureGroup(),
+    snow: L.featureGroup(),
 }
 
 // Hintergrundlayer
@@ -31,7 +32,8 @@ let layerControl = L.control.layers({
 }, {
     "Wetterstationen": themaLayer.stations,
     "Temperatur": themaLayer.temperature,
-    "Windgeschwindigkeit": themaLayer.windspeed.addTo(map), 
+    "Windgeschwindigkeit": themaLayer.windspeed,
+    "Schneehöhe (cm)": themaLayer.snow.addTo(map), 
 }).addTo(map);
 
 layerControl.expand();
@@ -119,6 +121,24 @@ function writeWindspeedLayer(jsondata) {
     }).addTo(themaLayer.windspeed);
 }
 
+function writeSnowLayer(jsondata) {
+    L.geoJSON(jsondata, {
+        filter: function(feature) {
+            if (feature.properties.HS > 0 && feature.properties.HS < 9999) {
+                return true;
+            }
+        },
+        pointToLayer: function (feature, latlng) {
+            let color = getColor(feature.properties.HS, COLORS.snow);
+            return L.marker(latlng, {
+                icon: L.divIcon({
+                    className: "aws-div-icon",
+                    html: `<span style="background-color:${color}">${feature.properties.HS.toFixed(1)}</span>`
+                })
+            });
+        },
+    }).addTo(themaLayer.snow);
+}
 
 async function loadStations(url) {
     let response = await fetch(url);
@@ -126,6 +146,7 @@ async function loadStations(url) {
     writeStationLayer(jsondata);
     writeTemperatureLayer(jsondata);
     writeWindspeedLayer(jsondata);
+    writeSnowLayer(jsondata);
 
 }
 loadStations("https://static.avalanche.report/weather_stations/stations.geojson");
