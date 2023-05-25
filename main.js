@@ -90,7 +90,7 @@ function writeTemperatureLayer(jsondata) {
         },
         pointToLayer: function (feature, latlng) {
             let color = getColor(feature.properties.LT, COLORS.temperature);
-            console.log("Color: ", color);
+            //console.log("Color: ", color);
             return L.marker(latlng, {
                 icon: L.divIcon({
                     className: "aws-div-icon",
